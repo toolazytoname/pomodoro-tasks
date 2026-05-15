@@ -1,0 +1,19 @@
+{
+  "name": "pomodoro-tasks",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "build": "npm run build -w client && npm run build -w server",
+    "db:push": "npm run db:push -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
