@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  quadrant        Int      // 1-4
+  urgency         Int      @default(3) // 1-5
+  importance      Int      @default(3) // 1-5
+  workload        Int      @default(3) // 1-5 (1=5min, 5=2h)
+  estimatedPomodoros Int @default(1)
+
+  // Dependencies stored as JSON array
+  dependsOn       String   @default("[]") // JSON array of task IDs
+  dependentTasks  String   @default("[]") // JSON array of task IDs
+
+  // Subtasks
+  parentId        String?
+  children        String   @default("[]") // JSON array of task IDs
+  isParent        Boolean  @default(false)
+
+  // Pomodoro
+  pomodorosCompleted Int   @default(0)
+  currentPomodoro    String? // JSON
+
+  status          String   @default("pending")
+  // pending | in_progress | completed | paused
+
+  tags            String   @default("[]") // JSON array
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+
+  parent          Task?    @relation("Subtasks", fields: [parentId], references: [id])
+  subtasks        Task[]   @relation("Subtasks")
+}
