@@ -55,20 +55,20 @@
 interface Task {
   id: string;              // UUID
   title: string;           // 任务标题
-  description?: string;    // 详细描述
-  quadrant: 1 | 2 | 3 | 4; // 四象限
-  urgency: number;         // 紧急程度 1-5
+  description?: string;     // 详细描述
+  quadrant: 1 | 2 | 3 | 4;  // 四象限
+  urgency: number;          // 紧急程度 1-5
   importance: number;       // 重要程度 1-5
-  workload: number;        // 工作量 1-5 (1=5分钟, 5=2小时)
+  workload: number;         // 工作量 1-5 (1=5分钟, 5=2小时)
   estimatedPomodoros: number; // 预估番茄数
 
   // 依赖
-  dependsOn: string[];     // 依赖的任务 ID
+  dependsOn: string[];      // 依赖的任务 ID
   dependentTasks: string[]; // 依赖此任务的任务 ID
 
   // 拆解
-  parentId?: string;       // 父任务 ID
-  children?: string[];     // 子任务 ID
+  parentId?: string;        // 父任务 ID
+  children: string[];      // 子任务 ID
   isParent: boolean;       // 是否是父任务(可拆解)
 
   // 番茄钟
@@ -99,11 +99,11 @@ interface Task {
 ┌─────────────────────┐
 │ [≡] 番茄任务  [⚙]  │  ← Header: 菜单 + 设置
 ├─────────────────────┤
-│ [四象限] [列表] [图] │  ← Tab 切换
+│ [四象限] [列表] [图] │  ← Sidebar 内切换
 ├─────────────────────┤
 │                     │
-│   四象限网格        │  ← 主要内容
-│   (2x2 可滚动)      │
+│   四象限网格         │  ← 主要内容
+│   (2x2 可滚动)       │
 │                     │
 ├─────────────────────┤
 │ [🍅 25:00] [▶ 开始] │  ← 底部番茄钟控制条
@@ -116,12 +116,10 @@ interface Task {
 │ [≡] 番茄任务                    [🍅 25:00] [👤] │
 ├────────────┬───────────────────────────────────┤
 │            │                                   │
-│  侧边栏     │     主内容区                      │
-│  - 四象限   │     (四象限/列表/依赖图)           │
+│  侧边栏     │     主内容区                       │
+│  - 四象限   │     (四象限/列表/依赖图)            │
 │  - 列表    │                                   │
 │  - 依赖图  │                                   │
-│  - 番茄钟  │                                   │
-│  - 送代理  │                                   │
 │            │                                   │
 └────────────┴───────────────────────────────────┘
 ```
@@ -164,7 +162,7 @@ interface Task {
 │                          │
 │ 所在象限                  │
 │ ○ Q1 紧急重要             │
-│ ● Q2 不紧急重要 ← 选中     │
+│ ● Q2 不紧急重要 ← 选中    │
 │ ○ Q3 紧急不重要            │
 │ ○ Q4 不紧急不重要          │
 │                          │
@@ -184,7 +182,7 @@ interface Task {
 ### 5.5 番茄钟
 - 默认 25 分钟专注 + 5 分钟休息
 - 可自定义时长
-- 运行时显示悬浮窗 (Web API)
+- 运行时显示底部 PomodoroBar
 - 完成时：浏览器通知 + 声音提醒
 - 长时间任务 (>4 番茄)：强制休息 15 分钟
 - 番茄数关联任务完成数统计
@@ -213,12 +211,8 @@ interface Task {
 | ListView | empty / loading / populated | 列表视图 |
 | DependencyGraph | empty / populated / focused | 依赖关系图 |
 | PomodoroBar | idle / running / paused / break | 底部计时条 |
-| PomodoroOverlay | - | 悬浮计时窗口 |
 | TaskEditor | create / edit | 任务编辑表单 |
-| DependencySelector | - | 依赖选择器 |
-| SubtaskList | collapsed / expanded | 子任务列表 |
-| AgentSender | idle / sending / sent / error | 代理发送器 |
-| TabBar | - | 移动端 Tab |
+| Sidebar | - | 侧边栏导航 |
 
 ---
 
@@ -233,33 +227,26 @@ PUT    /api/tasks/:id          - 更新任务
 DELETE /api/tasks/:id          - 删除任务
 ```
 
-### 依赖关系
-```
-GET    /api/tasks/:id/dependents    - 获取依赖此任务的任务
-GET    /api/tasks/:id/dependencies  - 获取此任务依赖的任务
-POST   /api/tasks/:id/depend        - 添加依赖
-DELETE /api/tasks/:id/depend/:depId - 移除依赖
-```
-
 ### 子任务
 ```
-GET    /api/tasks/:id/children       - 获取子任务
-POST   /api/tasks/:id/children       - 添加子任务
+GET    /api/tasks/:id/children - 获取子任务
 ```
 
 ### 番茄钟
 ```
-POST   /api/pomodoro/start           - 开始番茄钟
-POST   /api/pomodoro/pause           - 暂停
-POST   /api/pomodoro/resume          - 继续
-POST   /api/pomodoro/complete        - 完成
-POST   /api/pomodoro/abandon         - 放弃
+POST   /api/pomodoro/start     - 开始番茄钟
+POST   /api/pomodoro/pause     - 暂停
+POST   /api/pomodoro/resume    - 继续
+POST   /api/pomodoro/complete  - 完成
+POST   /api/pomodoro/abandon   - 放弃
 ```
 
 ### 代理
 ```
-POST   /api/agent/send               - 发送任务到代理
+POST   /api/agent/send         - 发送任务到代理
 ```
+
+> **注意**: 上述 API 为 Supabase Edge Functions 端点，由前端直接通过 `@supabase/supabase-js` 客户端调用。旧版 Fastify 后端 (`server/`) 已废弃，不再使用。
 
 ---
 
@@ -268,21 +255,18 @@ POST   /api/agent/send               - 发送任务到代理
 ### 前端
 - React 18 + TypeScript
 - Zustand (状态管理)
-- React Router (路由)
 - TailwindCSS (样式)
 - D3.js (依赖图)
 - Vite (构建)
+- Supabase JS 客户端 (直接数据库通信)
 
 ### 后端
-- Node.js + Fastify
-- Prisma ORM
-- SQLite (开发) / PostgreSQL (生产)
-- WebSocket (实时同步)
+- Supabase Edge Functions (Deno)
+- Supabase PostgreSQL
 - 浏览器通知 API
 
 ### 番茄钟实现
 - 前端定时器 (精度要求不高)
-- Service Worker 后台支持
 - Web Notification API
 - 完成时触发 Audio API
 
@@ -297,11 +281,12 @@ POST   /api/agent/send               - 发送任务到代理
 
 ```
 pomodoro-tasks/
-├── SPEC.md
 ├── client/
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── index.html
+│   ├── public/
+│   │   └── tomato.svg
 │   └── src/
 │       ├── main.tsx
 │       ├── App.tsx
@@ -312,36 +297,57 @@ pomodoro-tasks/
 │       │   ├── ListView.tsx
 │       │   ├── DependencyGraph.tsx
 │       │   ├── PomodoroBar.tsx
-│       │   ├── PomodoroOverlay.tsx
 │       │   ├── TaskEditor.tsx
-│       │   ├── DependencySelector.tsx
-│       │   ├── SubtaskList.tsx
-│       │   ├── AgentSender.tsx
-│       │   └── TabBar.tsx
-│       ├── hooks/
-│       │   ├── useTasks.ts
-│       │   ├── usePomodoro.ts
-│       │   └── useWebSocket.ts
+│       │   └── Sidebar.tsx
 │       ├── stores/
-│       │   └── taskStore.ts
-│       ├── utils/
-│       │   ├── priority.ts
-│       │   └── api.ts
-│       └── views/
-│           └── Dashboard.tsx
-├── server/
+│       │   └── taskStore.ts   # Zustand 状态
+│       └── lib/
+│           └── supabase.ts    # Supabase 客户端
+│
+├── supabase/
+│   ├── config.toml
+│   ├── tsconfig.json
+│   ├── functions/
+│   │   ├── _shared/
+│   │   │   └── db.ts         # 共享数据库工具
+│   │   ├── tasks/index.ts    # 任务 CRUD
+│   │   ├── pomodoro/index.ts # 番茄钟
+│   │   ├── agent/index.ts    # 代理发送
+│   │   └── health/index.ts   # 健康检查
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       ├── 002_increment_pomodoros_rpc.sql
+│       └── 003_pomodoro_rpcs.sql
+│
+├── server/                    # ⚠️ 遗留代码 (已废弃)
 │   ├── package.json
+│   ├── tsconfig.json
+│   ├── vitest.config.ts
+│   ├── vitest.setup.ts
 │   ├── prisma/
 │   │   └── schema.prisma
 │   └── src/
-│       ├── index.ts
-│       ├── routes/
-│       │   ├── tasks.ts
-│       │   ├── pomodoro.ts
-│       │   └── agent.ts
-│       └── services/
-│           ├── taskService.ts
-│           └── agentService.ts
-└── shared/
-    └── types.ts
+│       ├── index.ts           # Fastify 入口 (已废弃)
+│       ├── vitest.setup.ts
+│       └── routes/
+│           ├── tasks.ts       # 旧版任务路由
+│           ├── pomodoro.ts    # 旧版番茄钟路由
+│           └── agent.ts       # 旧版代理路由
+│
+├── shared/
+│   ├── package.json
+│   ├── vitest.config.ts
+│   ├── types.test.ts
+│   └── types.ts
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── .gitignore
+├── docker-compose.yml         # ⚠️ 遗留 Docker (已废弃)
+├── package.json
+├── package-lock.json
+├── SPEC.md
+└── README.md
 ```
